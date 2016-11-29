@@ -1,3 +1,10 @@
+"""
+Necessary utilities of the project.
+
+Version: 0.1
+Author: Sergey Ivanychev
+"""
+
 from os.path import isfile
 import requests
 from toolz import *
@@ -37,11 +44,26 @@ MEMBERSHIP_INIT_COMMAND = """create table Membership
 
 
 def compose_named_tuple(raw_tuple):
+    """
+    Converts raw tuple to the named one
+
+    :param raw_tuple: tuple that contains user information
+    :return: namedtuple
+    """
     raw = list(raw_tuple)
     raw.insert(3, None)
     return USER_FACTORY(*raw)
 
 def remote_users(login, password, since_id=0, per_request=100):
+    """
+    Downloads user information and yields user information as namedtuples.
+
+    :param login: GitHub username
+    :param password: GitHub password
+    :param since_id: starting id
+    :param per_request: how many users to download per each request
+    :return: the generator
+    """
     print("Hello")
     end = False
     if since_id is None:
@@ -59,6 +81,12 @@ def remote_users(login, password, since_id=0, per_request=100):
 
 
 def configure_db(conn):
+    """
+    Creates all necessary tables in the DB.
+
+    :param conn: connection instance of the DB
+    :return: None
+    """
     c = conn.cursor()
     c.execute(USERS_INIT_COMMAND)
     c.execute(FOLLOWINGS_INIT_COMMAND)
@@ -66,6 +94,12 @@ def configure_db(conn):
 
 
 def connect_db(path):
+    """
+    Connects to existing database or creates new if necessary.
+
+    :param path: path to the DB
+    :return: sqlite.connection instance to the DB.
+    """
     is_db = isfile(path)
     conn = sqlite3.connect(path)
     if not is_db:
@@ -74,11 +108,24 @@ def connect_db(path):
 
 
 def max_user_id(conn):
+    """
+    Requests max UserID from the DB.
+
+    :param conn: the DB connection instance
+    :return: max id or None, if the Users table is empty
+    """
     c = conn.cursor()
     c.execute("""select max({})
     from Users""".format(USER_FIELDS[0]))
     return list(c)[0][0]
 
 def add_user(cursor, user_tuple):
+    """
+    Adds user to the DB.Users
+
+    :param cursor: cursor of the DB
+    :param user_tuple: raw user data
+    :return: None
+    """
     cursor.execute("insert into Users values (?,?,?,?,?,?,?)", user_tuple)
 
